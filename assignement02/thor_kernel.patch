@@ -1,0 +1,27 @@
+From : Antoine Riard <ariard@student.42.fr>
+
+Modify the version string to mark the kernel as Thor's one.
+
+Signed-off-by: Antoine Riard <ariard@student.42.fr>
+Cc: Masahiro Yamada <yamada.masahiro@socionext.com>
+Cc: Michal Marek <michal.lkml@markovi.net>
+---
+ Makefile |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index e02d092bc2d6..aeedd1f6d370 100644
+--- a/Makefile
++++ b/Makefile
+@@ -2,7 +2,7 @@
+ VERSION = 4
+ PATCHLEVEL = 16
+ SUBLEVEL = 0
+-EXTRAVERSION = -rc5
++EXTRAVERSION = -thor_kernel
+ NAME = Fearless Coyote
+ 
+ # *DOCUMENTATION*
+
+--
+2.16.2
