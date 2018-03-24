@@ -1,0 +1,5 @@
+chap4 : debugging using /proc
+actual mountpoints : sysfs ?
+"the sysfs filesystem"
+
+parse linux sysfs

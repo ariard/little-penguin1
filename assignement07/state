@@ -1,0 +1,7 @@
+-> struct dentry *debugfss_create_dir
+-> struct dentry *debugfs_create_file
+-> concurrency : read LDD chap 5
+
+file should be removed at shutdown, not automatic
+
+udev + chown ?
