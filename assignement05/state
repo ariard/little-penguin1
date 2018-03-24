@@ -1,0 +1,7 @@
+=> misc_register
+
+/drivers/char/misc.c
+	-> flag MINOR_NUMBER...
+	-> how to show up the device as /dev/ortytwo ? "misc_register call device_create"
+	-> init fops { read, write }
+	-> sanitize data
