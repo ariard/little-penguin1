@@ -19,8 +19,8 @@ clean:
 re: clean default
 
 test:
-	@gcc -o app_id app_id.c
-	@ ./app_id /sys/kernel/debug/fortytwo/id
+	@gcc -o app app.c
+	@ ./app 
 
 test-clean:
-	@rm -f app_id
+	@rm -f app

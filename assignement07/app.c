@@ -6,21 +6,18 @@
 #include <string.h>
 #include <strings.h>
 
-int	main(int argc, char **argv)
+int	main(void)
 {
 	char	buf[10];
+	char	jbuf[64];
 	int	fd;
 	int	ret;
 
-	if (argc < 2) {
-		printf("Need to provide arg\n");
-		return (-1);
-	}
-
 	bzero(buf, 10);	
-	fd = open(argv[1], O_RDWR);
+	fd = open("/sys/kernel/debug/fortytwo/id", O_RDWR);
 	if (fd > 0)
 	{
+		printf("\n___ ID ___\n");
 		ret = read(fd, buf, 10);
 		printf("1st read [%s] ret : %d\n", buf, ret);
 		ret = read(fd, buf, 10);
@@ -33,9 +30,19 @@ int	main(int argc, char **argv)
 		printf("3st write (abcdefgh, 20) ret : %d\n", ret);
 		close(fd);
 	}
-	else {
-		printf("No such file %s\n", argv[1]);
-		return (-1);
+	else
+		dprintf(2, "No such file id\n");
+
+	bzero(jbuf, 64);
+	fd = open("/sys/kernel/debug/fortytwo/jiffies", O_RDONLY);
+	if (fd > 0) 
+	{
+		printf("\n___ JIFFIES ___\n");
+		ret = read(fd, jbuf, 64);
+		printf("read [%s] ret : %d\n", jbuf, ret);
 	}
+	else
+		dprintf(2, "No such file jiffies\n");
+
 	return (0);
 }

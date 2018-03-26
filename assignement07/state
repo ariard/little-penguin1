@@ -5,3 +5,6 @@
 file should be removed at shutdown, not automatic
 
 udev + chown ?
+
+how to manage rights ?
+how to manage concurrency ?
