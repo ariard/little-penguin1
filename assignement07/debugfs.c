@@ -8,7 +8,7 @@
 #include <linux/uaccess.h>
 #include <linux/jiffies.h>
 #include <linux/slab.h>
-#include <linux/gfp.h>
+#include <linux/rwsem.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Antoine Riard <ariard@student.42.fr>");
@@ -19,6 +19,8 @@ static struct dentry *debugfs_dir = NULL;
 static u64 j = 0;
 
 static char *foo_page = NULL;
+
+DECLARE_RWSEM(sem);
 
 static ssize_t id_read(struct file *filp, char __user *buffer,
 		size_t length, loff_t *offset)
@@ -60,18 +62,19 @@ static struct file_operations id_fops = {
 	.write = id_write,
 };
 
-
 static ssize_t foo_read(struct file *filp, char __user *buffer,
 		size_t length, loff_t *offset)
 {
 	ssize_t		retval = 0;
 	ssize_t		r;
 
+	down_read(&sem);
 	if ((r = copy_to_user(buffer, foo_page, PAGE_SIZE)))
 		retval = -EFAULT;
 	else
 		retval = r;
 
+	up_read(&sem);
 	return retval;
 }
 
@@ -80,14 +83,24 @@ static ssize_t foo_write(struct file *filp, const char __user *buffer,
 {
 	ssize_t		retval = 0;
 
+	down_write(&sem);
 	if (!foo_page)
-		foo_page = (char *)get_zeroed_page(GFP_KERNEL);
+		foo_page = kmalloc(sizeof(char) * PAGE_SIZE, GFP_KERNEL);
+
+	if (!foo_page) {
+		retval = -ENOMEM;
+		goto out;
+	}
+	else
+		memset(foo_page, 0, PAGE_SIZE);
 
 	if (copy_from_user(foo_page, buffer, PAGE_SIZE))
 		retval = -EFAULT;	
 	else
 		retval = 1;
 
+out:
+	up_write(&sem);
 	return retval;
 }
 
@@ -130,7 +143,8 @@ out:
 
 static void __exit debugfs_cleanup(void) 
 {
-	free_page(*(unsigned long *)foo_page);
+	if (foo_page)
+		kfree(foo_page);
 	debugfs_remove_recursive(debugfs_dir);
 	printk(KERN_INFO "Unloading debug driver...\n");
 }
