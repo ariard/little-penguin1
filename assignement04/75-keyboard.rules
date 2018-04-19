@@ -1,1 +1,1 @@
-SUBSYSTEM=="usb", ATTR{product}=="Storage Media", RUN+="/sbin/insmod /home/little-penguin/rendu/assignement04/main.ko"
+SUBSYSTEM=="usb", ATTR{product}=="Apple Keyboard", RUN+="/sbin/insmod /home/ariard/little-penguin1/assignement04/main.ko"
