@@ -1,0 +1,10 @@
+[ 4640.908078] usb 1-2.1: new low-speed USB device number 14 using uhci_hcd
+[ 4641.000138] usb 1-2.1: New USB device found, idVendor=05ac, idProduct=024f, bcdDevice= 0.74
+[ 4641.000232] usb 1-2.1: New USB device strings: Mfr=1, Product=2, SerialNumber=0
+[ 4641.000305] usb 1-2.1: Product: Apple Keyboard
+[ 4641.000353] usb 1-2.1: Manufacturer: Apple Inc.
+[ 4641.010965] input: Apple Inc. Apple Keyboard as /devices/pci0000:00/0000:00:11.0/0000:02:00.0/usb1/1-2/1-2.1/1-2.1:1.0/0003:05AC:024F.0017/input/input26
+[ 4641.065224] apple 0003:05AC:024F.0017: input,hidraw2: USB HID v1.11 Keyboard [Apple Inc. Apple Keyboard] on usb-0000:02:00.0-2.1/input0
+[ 4641.069883] input: Apple Inc. Apple Keyboard as /devices/pci0000:00/0000:00:11.0/0000:02:00.0/usb1/1-2/1-2.1/1-2.1:1.1/0003:05AC:024F.0018/input/input27
+[ 4641.123251] apple 0003:05AC:024F.0018: input,hidraw3: USB HID v1.11 Device [Apple Inc. Apple Keyboard] on usb-0000:02:00.0-2.1/input1
+[ 4641.126979] usb keyboard module : init 
