@@ -1,4 +1,5 @@
 NAME    	= main
+EXTRA_CFLAGS	= -I$(src)/include/
 
 ifneq ($(KERNELRELEASE),)
 	obj-m		+= $(NAME).o

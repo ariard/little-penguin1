@@ -4,55 +4,104 @@
 #include <linux/proc_fs.h>
 #include <linux/slab.h>
 #include <linux/sched.h>
-#include <linux/namespace.h>
+#include <linux/nsproxy.h>
+#include <linux/proc_fs.h>
 #include <asm/current.h>
+#include "mount.h"
 
-/* Assumption : number of mounts points inferior at mem page */
-
-int		mymounts_read(char *page, char **start, off_t offset, int count,
-		int *eof, void *data)
-{
-	ssize_t		retval = 0;
-	ssize_t		r;
-	char		*buf;
-
-	/* struct task_struct *current */
-		/*struct nsproxy *nsproxy */
-			/* struct mnt_namespace *mnt_ns */
+/* struct task_struct *current */
+	/*struct nsproxy *nsproxy */
+		/* struct mnt_namespace *mnt_ns */
+			/* struct mount *root */
 				/* struct vfsmount */
-	
-	/* how to handle the list */
-	/* list count size if too much print error */
-	/* allocate memory */
-	/* list - print into buf */
-	
-	/* name (device fiel ?)		mount points */
 
-	current;	
-	if ((r = copy_to_user(page, buf, count))) {
-			retval = -EFAULT;
-			goto err;
-	}
-	else {
-			retval = r;
+/* how to handle the list */
+/* list count size if too much print error */
+/* allocate memory */
+/* list - print into buf */
+
+/* name (device fiel ?)		mount points */
+
+static char	*buf = NULL;
+
+int		mymounts_open(struct inode *inode, struct file *filp)
+{
+	ssize_t			retval = 0;
+	struct dentry		*dentry;
+	struct list_head	*pos;
+	const char		*mnt_devname;
+
+	dentry = current->nsproxy->mnt_ns->root->mnt_mountpoint;
+	mnt_devname = current->nsproxy->mnt_ns->root->mnt_devname;
+
+
+	if (!(buf = kmalloc(strlen(dentry->d_iname) + strlen(mnt_devname) + 2, GFP_KERNEL))) {
+	 	retval = -ENOMEM;
+		goto err;
 	}
 	
+	strcpy(buf, dentry->d_iname);
+	strncat(buf, " ", 1);
+	strcat(buf, mnt_devname);
+
 err:
-	*eof = 1;
 	return retval;
 }
 
+/* Assumption : number of mounts points inferior at mem page */
+
+static ssize_t	mymounts_read(struct file *filp, char __user *buffer,
+		size_t length, loff_t *offset)
+{
+	ssize_t		retval = 0;
+	size_t		count;
+	size_t		size;
+
+	size = strlen(buf);
+	count = size - *offset;
+	if (length < count)
+		count = length;
+
+	printk("count %ld\n", count);
+
+	if ((copy_to_user(buffer, &buf[*offset], count))) {
+		retval = -EFAULT;
+		goto err;
+	}
+	else {
+		retval = count;
+	}
+	printk("retval %ld\n", retval);
+	
+	*offset += count;
+err:
+	return retval;
+}
+
+int		mymounts_flush(struct file *filp, fl_owner_t id)
+{
+	kfree(buf);
+
+	return 0;
+}
+
+static struct file_operations mymounts_ops = {
+	.read = mymounts_read,
+	.open = mymounts_open,
+	.flush = mymounts_flush,
+};
+
 static int __init mymounts_init(void) {
-	create_proc_read_entry("mymounts", 0, NULL, mymounts_read, NULL);
+	proc_create("mymounts", 0, NULL, &mymounts_ops);
 	return (0);
 }
 
-static void __exit hello_cleanup(void) {
+static void __exit mymounts_cleanup(void) {
 	remove_proc_entry("mymounts", NULL);
 }
 
-module_init(hello_init);
-module_exit(hello_cleanup);
+module_init(mymounts_init);
+module_exit(mymounts_cleanup);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Antoine Riard <ariard@student.42.fr>");
