@@ -5,6 +5,7 @@
 #include <linux/slab.h>
 #include <linux/sched.h>
 #include <linux/nsproxy.h>
+#include <linux/spinlock.h>
 #include <linux/proc_fs.h>
 #include <asm/current.h>
 #include "mount.h"
@@ -24,25 +25,43 @@
 
 static char	*buf = NULL;
 
+DEFINE_RWLOCK(mymounts_lock);
+
 int		mymounts_open(struct inode *inode, struct file *filp)
 {
 	ssize_t			retval = 0;
 	struct dentry		*dentry;
-	struct list_head	*pos;
-	const char		*mnt_devname;
+	struct mnt_namespace	*mnt = NULL;
+	struct mnt_namespace	*tmp;
+	size_t			size = 0;
 
-	dentry = current->nsproxy->mnt_ns->root->mnt_mountpoint;
-	mnt_devname = current->nsproxy->mnt_ns->root->mnt_devname;
+/*	dentry = current->nsproxy->mnt_ns->root->mnt_mountpoint; */
+/*	mnt_devname = current->nsproxy->mnt_ns->root->mnt_devname; */
+
+	printk("mymounts_open");
+	read_lock(&mymounts_lock);
+	mnt = current->nsproxy->mnt_ns;
+	printk("mnt id %p\n", mnt->list.next);
+	list_for_each_entry(tmp, &mnt->list, list) {
+		printk(" %s\n", tmp->root->mnt_devname);
+		if (size == 1)
+			break;
+	}
+	read_unlock(&mymounts_lock);
+	printk("list size %ld\n", size);
+	return retval;
+	printk("dentry name %s\n", mnt->root->mnt_mountpoint->d_iname);
+	printk("mnt_devname name %s\n", mnt->root->mnt_devname);
 
 
-	if (!(buf = kmalloc(strlen(dentry->d_iname) + strlen(mnt_devname) + 2, GFP_KERNEL))) {
+	if (!(buf = kmalloc(strlen(dentry->d_iname) + 2, GFP_KERNEL))) {
 	 	retval = -ENOMEM;
 		goto err;
 	}
 	
 	strcpy(buf, dentry->d_iname);
 	strncat(buf, " ", 1);
-	strcat(buf, mnt_devname);
+/*	strcat(buf, mnt_devname); */
 
 err:
 	return retval;
@@ -57,6 +76,7 @@ static ssize_t	mymounts_read(struct file *filp, char __user *buffer,
 	size_t		count;
 	size_t		size;
 
+	return retval;
 	size = strlen(buf);
 	count = size - *offset;
 	if (length < count)
