@@ -8,21 +8,9 @@
 #include <linux/spinlock.h>
 #include <linux/rwsem.h>
 #include <linux/proc_fs.h>
+#include <linux/dcache.h>
 #include <asm/current.h>
 #include "mount.h"
-
-/* struct task_struct *current */
-	/*struct nsproxy *nsproxy */
-		/* struct mnt_namespace *mnt_ns */
-			/* struct mount *root */
-				/* struct vfsmount */
-
-/* how to handle the list */
-/* list count size if too much print error */
-/* allocate memory */
-/* list - print into buf */
-
-/* name (device fiel ?)		mount points */
 
 static char	*buf = NULL;
 
@@ -31,34 +19,33 @@ DECLARE_RWSEM(namespace_sem);
 int		mymounts_open(struct inode *inode, struct file *filp)
 {
 	ssize_t			retval = 0;
-	struct dentry		*dentry;
 	struct mnt_namespace	*mnt = NULL;
 	struct mount		*tmp;
 	size_t			size = 0;
+	char			raw[256];
+	char			b[512];
+	char			*path;
 
-/*	dentry = current->nsproxy->mnt_ns->root->mnt_mountpoint; */
-/*	mnt_devname = current->nsproxy->mnt_ns->root->mnt_devname; */
-
-	printk("mymounts_open");
-	mnt = current->nsproxy->mnt_ns;
-	down_read(&namespace_sem);
-	list_for_each_entry(tmp, &mnt->list, mnt_list) {
-		printk(" %s\n", tmp->mnt_devname);
-	}
-	up_read(&namespace_sem);
-	return retval;
-	printk("dentry name %s\n", mnt->root->mnt_mountpoint->d_iname);
-	printk("mnt_devname name %s\n", mnt->root->mnt_devname);
-
-
-	if (!(buf = kmalloc(strlen(dentry->d_iname) + 2, GFP_KERNEL))) {
+	if (!(buf = kmalloc(PAGE_SIZE, GFP_KERNEL))) {
 	 	retval = -ENOMEM;
 		goto err;
 	}
 	
-	strcpy(buf, dentry->d_iname);
-	strncat(buf, " ", 1);
-/*	strcat(buf, mnt_devname); */
+	mnt = current->nsproxy->mnt_ns;
+	down_read(&namespace_sem);
+	list_for_each_entry(tmp, &mnt->list, mnt_list) {
+		if (!tmp->mnt_mp)
+			continue;
+		memset(raw, 0, 256);
+		path = dentry_path_raw(tmp->mnt_mountpoint, raw, 256);
+		memset(b, 0, 512);
+		sprintf(b, "%-20s %s\n", tmp->mnt_devname, path);
+		size += strlen(b);
+		if (size > PAGE_SIZE)
+			break;
+		strcat(buf, b);
+	}
+	up_read(&namespace_sem);
 
 err:
 	return retval;
@@ -73,13 +60,10 @@ static ssize_t	mymounts_read(struct file *filp, char __user *buffer,
 	size_t		count;
 	size_t		size;
 
-	return retval;
 	size = strlen(buf);
 	count = size - *offset;
 	if (length < count)
 		count = length;
-
-	printk("count %ld\n", count);
 
 	if ((copy_to_user(buffer, &buf[*offset], count))) {
 		retval = -EFAULT;
@@ -88,7 +72,6 @@ static ssize_t	mymounts_read(struct file *filp, char __user *buffer,
 	else {
 		retval = count;
 	}
-	printk("retval %ld\n", retval);
 	
 	*offset += count;
 err:
