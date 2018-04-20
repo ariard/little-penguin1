@@ -6,6 +6,7 @@
 #include <linux/sched.h>
 #include <linux/nsproxy.h>
 #include <linux/spinlock.h>
+#include <linux/rwsem.h>
 #include <linux/proc_fs.h>
 #include <asm/current.h>
 #include "mount.h"
@@ -25,30 +26,26 @@
 
 static char	*buf = NULL;
 
-DEFINE_RWLOCK(mymounts_lock);
+DECLARE_RWSEM(namespace_sem);
 
 int		mymounts_open(struct inode *inode, struct file *filp)
 {
 	ssize_t			retval = 0;
 	struct dentry		*dentry;
 	struct mnt_namespace	*mnt = NULL;
-	struct mnt_namespace	*tmp;
+	struct mount		*tmp;
 	size_t			size = 0;
 
 /*	dentry = current->nsproxy->mnt_ns->root->mnt_mountpoint; */
 /*	mnt_devname = current->nsproxy->mnt_ns->root->mnt_devname; */
 
 	printk("mymounts_open");
-	read_lock(&mymounts_lock);
 	mnt = current->nsproxy->mnt_ns;
-	printk("mnt id %p\n", mnt->list.next);
-	list_for_each_entry(tmp, &mnt->list, list) {
-		printk(" %s\n", tmp->root->mnt_devname);
-		if (size == 1)
-			break;
+	down_read(&namespace_sem);
+	list_for_each_entry(tmp, &mnt->list, mnt_list) {
+		printk(" %s\n", tmp->mnt_devname);
 	}
-	read_unlock(&mymounts_lock);
-	printk("list size %ld\n", size);
+	up_read(&namespace_sem);
 	return retval;
 	printk("dentry name %s\n", mnt->root->mnt_mountpoint->d_iname);
 	printk("mnt_devname name %s\n", mnt->root->mnt_devname);
