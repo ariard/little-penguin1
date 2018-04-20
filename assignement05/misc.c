@@ -20,7 +20,7 @@ static ssize_t misc_read(struct file *filp, char __user *buffer,
 	if ((r = copy_to_user(buffer, "ariard", 6)))
 		retval = -EFAULT;
 	else
-		retval = r;
+		retval = 6;
 
 	return retval;
 }
@@ -42,6 +42,7 @@ static ssize_t misc_write(struct file *filp, const char __user *buffer,
 	else
 		retval = -EINVAL;
 
+	return retval;
 out:
 	return retval;
 }
