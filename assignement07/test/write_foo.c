@@ -6,7 +6,7 @@
 #include <string.h>
 #include <strings.h>
 
-#define SIZE	4096
+#define SIZE	8192
 
 int	main(void)
 {

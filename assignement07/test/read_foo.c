@@ -6,7 +6,7 @@
 #include <string.h>
 #include <strings.h>
 
-#define SIZE	4096
+#define SIZE	8192
 
 int	main(void)
 {
@@ -19,6 +19,7 @@ int	main(void)
 	if (fd > 0)
 	{
 		printf("\n___ FOO ___\n");
+		memset(buf, 0, SIZE);
 		ret = read(fd, buf, SIZE);
 		printf("1st read [%s] ret %d\n", buf, ret);
 		close(fd);

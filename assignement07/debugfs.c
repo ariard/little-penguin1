@@ -31,7 +31,7 @@ static ssize_t id_read(struct file *filp, char __user *buffer,
 	if ((r = copy_to_user(buffer, "ariard", 6)))
 		retval = -EFAULT;
 	else
-		retval = r;
+		retval = 6;
 
 	return retval;
 }
@@ -53,6 +53,7 @@ static ssize_t	id_write(struct file *filp, const char __user *buffer,
 	else
 		retval = -EINVAL;
 
+	return retval;
 out:
 	return retval;
 }
@@ -72,7 +73,7 @@ static ssize_t foo_read(struct file *filp, char __user *buffer,
 	if ((r = copy_to_user(buffer, foo_page, PAGE_SIZE)))
 		retval = -EFAULT;
 	else
-		retval = r;
+		retval = strlen(foo_page);
 
 	up_read(&sem);
 	return retval;
@@ -84,8 +85,10 @@ static ssize_t foo_write(struct file *filp, const char __user *buffer,
 	ssize_t		retval = 0;
 
 	down_write(&sem);
-	if (!foo_page)
+	if (!foo_page) {
 		foo_page = kmalloc(sizeof(char) * PAGE_SIZE, GFP_KERNEL);
+		memset(foo_page, 0, PAGE_SIZE);
+	}
 
 	if (!foo_page) {
 		retval = -ENOMEM;
@@ -95,10 +98,12 @@ static ssize_t foo_write(struct file *filp, const char __user *buffer,
 		memset(foo_page, 0, PAGE_SIZE);
 
 	if (copy_from_user(foo_page, buffer, PAGE_SIZE))
-		retval = -EFAULT;	
+		retval = -EFAULT;
 	else
-		retval = 1;
+		retval = strlen(foo_page);
 
+	up_write(&sem);
+	return retval;
 out:
 	up_write(&sem);
 	return retval;
@@ -113,15 +118,9 @@ static int __init debugfs_init(void)
 {
 	int		retval = 0;
 
-	if ((debugfs_dir = debugfs_create_dir("fortytwo", NULL)) == -ENODEV) {
+	if (!(debugfs_dir = debugfs_create_dir("fortytwo", NULL))) {
 		printk(KERN_ERR"CONFIG_DEBUG_FS need to be set to use debug driver\n");
 		retval = -ENODEV;
-		goto out;
-	}
-
-	if (!debugfs_dir) {
-		printk(KERN_ERR"debug driver : something went wrong\n");
-		retval = -EEXIST;
 		goto out;
 	}
 
@@ -137,6 +136,7 @@ static int __init debugfs_init(void)
 		
 	printk(KERN_INFO "Loading debug driver\n");
 
+	return retval;
 out:
 	return retval;
 }
