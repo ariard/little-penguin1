@@ -1,8 +1,0 @@
-How to simulate keyboard on VM WARE ? localize and modify .vmx file
-
-LESSONS = 
-	- init properly, use MACRO
-	- in case of doubt, use the simplest API
-	- check the fucking control flow !
-
-redo assignement09
