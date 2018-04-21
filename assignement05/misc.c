@@ -16,11 +16,13 @@ static ssize_t misc_read(struct file *filp, char __user *buffer,
 {
 	ssize_t		retval = 0;
 	ssize_t		r;
+	size_t		count = 0;
 
-	if ((r = copy_to_user(buffer, "ariard", 6)))
+	count = (6 > length) ? length : 6;
+	if ((r = copy_to_user(buffer, "ariard", count)))
 		retval = -EFAULT;
 	else
-		retval = 6;
+		retval = count;
 
 	return retval;
 }

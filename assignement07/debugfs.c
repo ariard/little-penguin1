@@ -27,7 +27,9 @@ static ssize_t id_read(struct file *filp, char __user *buffer,
 {
 	ssize_t		retval = 0;
 	ssize_t		r;
+	size_t		count = 0;
 
+	count = (6 > length) ? length : 6;
 	if ((r = copy_to_user(buffer, "ariard", 6)))
 		retval = -EFAULT;
 	else
@@ -41,9 +43,11 @@ static ssize_t	id_write(struct file *filp, const char __user *buffer,
 {
 	ssize_t		retval = 0;
 	char 		wr_buf[6];
+	size_t		count = 0;
 
+	count = (6 > length) ? length : 6;
 	memset(wr_buf, 0, 6);
-	if (copy_from_user(wr_buf, buffer, 6)) {
+	if (copy_from_user(wr_buf, buffer, count)) {
 		retval = -EFAULT;
 		goto out;
 	}
@@ -68,12 +72,16 @@ static ssize_t foo_read(struct file *filp, char __user *buffer,
 {
 	ssize_t		retval = 0;
 	ssize_t		r;
+	size_t		size;
+	size_t		count;
 
 	down_read(&sem);
-	if ((r = copy_to_user(buffer, foo_page, PAGE_SIZE)))
+	size = strlen(foo_page);
+	count = (size > length) ? length : size;
+	if ((r = copy_to_user(buffer, foo_page, count)))
 		retval = -EFAULT;
 	else
-		retval = strlen(foo_page);
+		retval = count;
 
 	up_read(&sem);
 	return retval;
@@ -83,6 +91,7 @@ static ssize_t foo_write(struct file *filp, const char __user *buffer,
 		size_t length, loff_t *offset)
 {
 	ssize_t		retval = 0;
+	size_t		count;
 
 	down_write(&sem);
 	if (!foo_page) {
@@ -97,7 +106,7 @@ static ssize_t foo_write(struct file *filp, const char __user *buffer,
 	else
 		memset(foo_page, 0, PAGE_SIZE);
 
-	if (copy_from_user(foo_page, buffer, PAGE_SIZE))
+	if (copy_from_user(foo_page, buffer, count))
 		retval = -EFAULT;
 	else
 		retval = strlen(foo_page);
