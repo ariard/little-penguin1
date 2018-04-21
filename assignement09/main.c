@@ -25,6 +25,7 @@ int		mymounts_open(struct inode *inode, struct file *filp)
 	char			raw[256];
 	char			b[512];
 	char			*path;
+	char			fullpath[512];
 
 	if (!(buf = kmalloc(PAGE_SIZE, GFP_KERNEL))) {
 	 	retval = -ENOMEM;
@@ -36,10 +37,18 @@ int		mymounts_open(struct inode *inode, struct file *filp)
 	list_for_each_entry(tmp, &mnt->list, mnt_list) {
 		if (!tmp->mnt_mp)
 			continue;
+		memset(fullpath, 0, 256);
+		memset(raw, 0, 256);
+		path = dentry_path_raw(tmp->mnt_parent->mnt_mountpoint, raw, 256);
+		strcat(fullpath, path);
 		memset(raw, 0, 256);
 		path = dentry_path_raw(tmp->mnt_mountpoint, raw, 256);
+		strcat(fullpath, path);
 		memset(b, 0, 512);
-		sprintf(b, "%-20s %s\n", tmp->mnt_devname, path);
+		if (strncmp(fullpath, "//", 2) == 0)
+			sprintf(b, "%-20s %s\n", tmp->mnt_devname, &fullpath[1]);
+		else	
+			sprintf(b, "%-20s %s\n", tmp->mnt_devname, fullpath);
 		size += strlen(b);
 		if (size > PAGE_SIZE)
 			break;
